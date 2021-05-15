@@ -170,8 +170,8 @@ func main() {
 
 		if count == cfg.Threshhold {
 			// get the last n-1 backup timestamps
-			first := backupStamps[0]
-			last := backupStamps[len(backupStamps)-2]
+			first := filepath.Base(backupStamps[0])
+			last := filepath.Base(backupStamps[len(backupStamps)-2])
 			// zip name
 			archiveZipName := fmt.Sprintf("archive_%s_%s.zip", first, last)
 			archivePath := filepath.Join(cfg.ArchivePath, archiveZipName)
