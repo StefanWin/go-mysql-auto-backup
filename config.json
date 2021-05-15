@@ -1,0 +1,13 @@
+{
+    "db": {
+        "db_name": "test-database",
+        "db_user": "root",
+        "db_pw": "root"
+    },
+    "data_path": "./data",
+    "log_file_path": "./log.log",
+    "backups_path" : "./backups",
+    "archive_path" : "./archive",
+    "every_x_days": 1,
+    "archive_after_x": 7
+}
