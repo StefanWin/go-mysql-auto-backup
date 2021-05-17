@@ -175,6 +175,9 @@ func main() {
 		if count == cfg.Threshhold {
 			log.Printf("%d backups: starting cleanup\n", count)
 			// remove the last n-1 backups
+			if err := rsyncData(backupPath, cfg.ArchivePath); err != nil {
+				log.Fatalf("failed to move directory: %s -> %s\n", backupPath, cfg.ArchivePath)
+			}
 			for _, dir := range backupStamps[:cfg.Threshhold-1] {
 				if directoryExists(dir) {
 					log.Printf("removing directory: %s\n", dir)
