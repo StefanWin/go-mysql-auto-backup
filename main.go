@@ -70,10 +70,6 @@ func checkRequirements() error {
 	if err != nil {
 		return err
 	}
-	_, err = exec.LookPath("zip")
-	if err != nil {
-		return err
-	}
 	_, err = exec.LookPath("rsync")
 	return err
 }
@@ -177,25 +173,9 @@ func main() {
 		backupStamps = append(backupStamps, backupPath)
 		count++
 		if count == cfg.Threshhold {
-			log.Printf("backup #%d : starting archival process\n", count)
-			// get the last n-1 backup timestamps
-			first := filepath.Base(backupStamps[0])
-			last := filepath.Base(backupStamps[len(backupStamps)-2])
-			// zip name
-			archiveZipName := fmt.Sprintf("archive_%s_%s.zip", first, last)
-			archivePath := filepath.Join(cfg.ArchivePath, archiveZipName)
-			// create zip command
-			args := []string{"-r", archivePath}
-			// last n-1 backups
-			args = append(args, backupStamps[:len(backupStamps)-2]...)
-			cmd := exec.Command("zip", args...)
-			cmd.Stderr = log.Writer()
-			log.Printf("running command : '%s'\n", cmd.String())
-			if err := cmd.Run(); err != nil {
-				log.Fatalf("error archiving last %d backups: %v", cfg.Threshhold, err)
-			}
+			log.Printf("%d backups: starting cleanup\n", count)
 			// remove the last n-1 backups
-			for _, dir := range backupStamps[:len(backupStamps)-2] {
+			for _, dir := range backupStamps[:cfg.Threshhold-1] {
 				if directoryExists(dir) {
 					log.Printf("removing directory: %s\n", dir)
 					if err := os.RemoveAll(dir); err != nil {
