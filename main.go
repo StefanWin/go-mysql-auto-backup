@@ -55,11 +55,12 @@ func directoryExists(directory string) bool {
 // ensureDir creates a directory if it does not exist.
 func ensureDir(directory string) error {
 	if !directoryExists(directory) {
-		err := os.Mkdir(directory, 0644)
+		err := os.Mkdir(directory, 0777)
 		if err != nil {
 			return fmt.Errorf("failed to create directory : %s", directory)
 		}
 	}
+	log.Printf("created directory: %s\n", directory)
 	return nil
 }
 
@@ -93,8 +94,14 @@ func rsyncData(src, dst string) error {
 
 // mysqldump exports the database to the destination via mysqldump.
 func mysqldump(user, pw, db, dst string) error {
-	cmd := exec.Command("mysqldump", "-u", user, fmt.Sprintf("-p%s", pw), ">", dst)
-	setCmdOut(cmd)
+	cmd := exec.Command("mysqldump", "-u", user, fmt.Sprintf("-p%s", pw), db)
+	dumpFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dumpFile.Close()
+	cmd.Stdout = dumpFile
+	// setCmdOut(cmd)
 	log.Printf("running command : '%s'\n", cmd.String())
 	return cmd.Run()
 }
