@@ -95,7 +95,7 @@ func rsyncData(src, dst string) error {
 // mysqldump exports the database to the destination via mysqldump.
 func mysqldump(user, pw, db, dst string) error {
 	cmd := exec.Command("mysqldump", "-u", user, fmt.Sprintf("-p%s", pw), db)
-	dumpFile, err := os.Create(dst)
+	dumpFile, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -151,6 +151,8 @@ func main() {
 		// create time format
 		timestamp := time.Now()
 		dir := timestamp.Format("2006-01-02")
+		log.Println("##############################################################")
+		log.Printf("running backup #%d : %s\n", count, dir)
 
 		// create subdirectory within backup directory
 		backupPath := filepath.Join(cfg.BackupPath, dir)
@@ -166,7 +168,7 @@ func main() {
 		}
 
 		// copy data to current backup directory
-		dataBackupPath := filepath.Join(backupPath, "data")
+		dataBackupPath := backupPath
 		if err := rsyncData(cfg.DataPath, dataBackupPath); err != nil {
 			log.Fatalf("failed to run rsync: %v", err)
 		}
@@ -174,8 +176,8 @@ func main() {
 		// store subdirectory
 		backupStamps = append(backupStamps, backupPath)
 		count++
-
 		if count == cfg.Threshhold {
+			log.Printf("backup #%d : starting archival process\n", count)
 			// get the last n-1 backup timestamps
 			first := filepath.Base(backupStamps[0])
 			last := filepath.Base(backupStamps[len(backupStamps)-2])
@@ -187,7 +189,7 @@ func main() {
 			// last n-1 backups
 			args = append(args, backupStamps[:len(backupStamps)-2]...)
 			cmd := exec.Command("zip", args...)
-			setCmdOut(cmd)
+			cmd.Stderr = log.Writer()
 			log.Printf("running command : '%s'\n", cmd.String())
 			if err := cmd.Run(); err != nil {
 				log.Fatalf("error archiving last %d backups: %v", cfg.Threshhold, err)
@@ -195,6 +197,7 @@ func main() {
 			// remove the last n-1 backups
 			for _, dir := range backupStamps[:len(backupStamps)-2] {
 				if directoryExists(dir) {
+					log.Printf("removing directory: %s\n", dir)
 					if err := os.RemoveAll(dir); err != nil {
 						log.Fatalf("error while removing directory: %v", err)
 					}
@@ -203,7 +206,7 @@ func main() {
 			count = 0
 			backupStamps = make([]string, 0)
 		}
-
+		log.Println("##############################################################")
 		// sleep sweet summer child
 		time.Sleep(time.Hour * 24 * time.Duration(cfg.DayInterval))
 	}
