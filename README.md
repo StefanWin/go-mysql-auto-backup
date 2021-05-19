@@ -7,10 +7,7 @@ in intervals and archive the last `n-1` backups after `n` backups.
 
 # Requirements
 - `mysqldump`
-- `zip`
 - `rsync`
-
-e.g. on Ubuntu `sudo apt install mysqldump zip rsync`
 
 # Configuration
 See `config.json` for reference.
@@ -29,4 +26,4 @@ See `config.json` for reference.
 - `go-mysql-auto-backup -config="path/to/config.json"`
 - `go run main.go -config="path/to/config.json"`
 
-Run either of those commands as `systemd` unit.
+Run either of those commands as a `systemd` unit.
